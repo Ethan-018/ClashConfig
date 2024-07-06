@@ -377,7 +377,7 @@ rule-providers:
   #1
   AAAA_direct:
     <<: *rp1
-    url: https://raw.githubusercontent.com/Ethan-018/ClashConfig/main/rule/clash/AAAA_proxy.yaml
+    url: https://raw.githubusercontent.com/Ethan-018/ClashConfig/main/rule/clash/AAAA_direct.yaml
     path: ./ruleset/AAAA_direct.yaml
   #1
   AAAA_proxy:
