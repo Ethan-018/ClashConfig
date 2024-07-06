@@ -1,0 +1,623 @@
+######### 锚点 start #######
+#代理策略组
+pgtp0: &pgtp0 {type: select,proxies: [DIRECT,🚀 节点选择,♻️ 自动选择,🚀 手动切换,🇺🇲 美国节点,🇭🇰 香港节点,🇸🇬 狮城节点,🇰🇷 韩国节点,🌎 Other,⭕️ socks]}
+pgtp1: &pgtp1  {type: select,proxies: [🚀 节点选择,♻️ 自动选择,🚀 手动切换,🇺🇲 美国节点,🇭🇰 香港节点,🇸🇬 狮城节点,🇰🇷 韩国节点,🌎 Other,⭕️ socks,DIRECT]}
+
+#国内策略组
+pgcn: &pgcn {type: select,proxies: [DIRECT,🚀 节点选择,🚀 手动切换,⭕️ socks]}
+
+#订阅节点筛选,去除订阅广告节点,正则匹配
+ef: &ef {exclude-filter: "(?i)订阅|刷新|.com"}  
+
+#剔除高速节点
+efs: &efs {exclude-filter: "深港|家宽|游戏|剩余|流量|0.5|0.5倍|0.5x|2.0|2倍|2x|3.0|3倍|3x|4.0|4倍|4x|5.0|5倍|5x"}
+
+#rule-providers相关引用
+rp1: &rp1 {type: http,behavior: classical,interval: 86400}  #classical 支持路由规则的全部类型 (rule-set/sub-rule 除外)
+rp2: &rp2 {type: http,behavior: domain,interval: 86400}  #domain类规则集合内容通配应遵守clash 通配符
+rp3: &rp3 {type: http,behavior: ipcidr,interval: 86400}  #ipcidr
+  
+#订阅相关配置
+p: &p {type: http, interval: 3600, <<: *ef,health-check: {enable: true, url: https://www.gstatic.com/generate_204, interval: 300}}
+
+#订阅用户
+use: &use
+  type: select
+  use:
+  - provider1
+  - provider2
+  - provider3
+  - provider4
+
+######### 锚点 end #######
+
+#订阅链接设置
+#替换URL链接,订阅链接可为代理集链接或订阅链接.可增加用户,名称不重复,use需同步增加
+proxy-providers:
+  provider1:  #本地文件代理集1
+    <<: *p 
+    type: file
+    #将代理集放在"应用目录"里面，win下C:\Users\用户名\.config\clash-verge\proxy_provider\provider1.yaml
+    path: ./proxy_provider/provider1.yaml 
+  provider2:  ##站点代理集2
+    <<: *p
+    type: file
+    #path: ./proxy_provider/provider2.yaml 
+    #url: https://example.com/sub
+  provider3:    #站点代理集3
+    <<: *p
+    path: ./proxy_provider/provider3.yaml 
+    #url: https://example.com/sub/
+  provider4:    #站点代理集4
+    <<: *p
+    path: ./proxy_provider/provider4.yaml
+    #url: https://example.com/sub
+
+
+#全局设置
+port: 7890 #http(s) 代理端口
+socks-port: 7891 #socks4/4a/5 代理端口
+mixed-port: 7892 #混合代理端口 http(s)+socks
+redir-port: 7893 #redirect 透明代理端口，仅能代理 TCP 流量
+tproxy-port: 7894 #tproxy 透明代理端口，可以代理 TCP 以及 UDP 流量
+
+#外部控制
+external-controller: 127.0.0.1:9090 #外部控制器，可以使用 RESTful API 来控制你的 Clash 内核
+secret: '12345678' #API 的访问密钥
+bind-address: "*" #绑定单个 IPV6 地址 * 号未绑定
+#external-ui: "./ui" #可以为绝对路径，或者 Clash 工作目录的相对路径
+
+unified-delay: false # 统一延迟 更换延迟计算方式,去除握手等额外延迟
+geodata-mode: true #更改geoip使用文件,mmdb或者dat,可选true / flase,true为dat,此项有默认值flase
+#geodata-loader: standard #memconservative专为内存受限(小内存)设备优化的加载器(默认值)；standard标准加载器
+tcp-concurrent: true # TCP并发 可选值 true/false
+#interface-name: eth1 #Clash 的流量出站接口
+#routing-mark: 6666 为 Linux 下的出站连接提供默认流量标记
+find-process-mode: strict #控制是否让 Clash 去匹配进程，strict 默认，由 Clash 判断是否开启
+global-client-fingerprint: chrome #全局客户端指纹，低于proxy的client-fingerprint
+allow-lan: true # 允许局域网 允许其他设备经过 Clash 的代理端口访问互联网
+mode: rule #运行模式 rule 规则匹配；global 全局代理(需要在GLOBAL策略组选择代理/策略)；direct 全局直连
+log-level: info #Clash 内核输出日志的等级，仅在控制台和控制页面输出
+ipv6: false # 是否允许内核接受 IPv6 流量 可选值 true/false,默认为 false
+
+geox-url:
+  geoip: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat
+  geosite: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat
+  mmdb: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb
+profile:
+  store-selected: true
+  store-fake-ip: true
+sniffer:
+  enable: true
+  parse-pure-ip: true
+tun:
+  enable: true
+  stack: mixed
+  device: utun
+  auto-route: false
+  auto-detect-interface: false
+  dns-hijack:
+  - tcp://any:53
+
+dns:
+  enable: true
+  listen: 0.0.0.0:7874
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - "*"
+    - "+.lan"
+    - "+.local"
+    - "*.lan"
+    - "*.localdomain"
+    - "*.example"
+    - "*.invalid"
+    - "*.localhost"
+    - "*.test"
+    - "*.local"
+    - "*.home.arpa"
+    - time.*.com
+    - time.*.gov
+    - time.*.edu.cn
+    - time.*.apple.com
+    - time-ios.apple.com
+    - time1.*.com
+    - time2.*.com
+    - time3.*.com
+    - time4.*.com
+    - time5.*.com
+    - time6.*.com
+    - time7.*.com
+    - ntp.*.com
+    - ntp1.*.com
+    - ntp2.*.com
+    - ntp3.*.com
+    - ntp4.*.com
+    - ntp5.*.com
+    - ntp6.*.com
+    - ntp7.*.com
+    - "*.time.edu.cn"
+    - "*.ntp.org.cn"
+    - "+.pool.ntp.org"
+    - time1.cloud.tencent.com
+    - music.163.com
+    - "*.music.163.com"
+    - "*.126.net"
+    - musicapi.taihe.com
+    - music.taihe.com
+    - songsearch.kugou.com
+    - trackercdn.kugou.com
+    - "*.kuwo.cn"
+    - api-jooxtt.sanook.com
+    - api.joox.com
+    - joox.com
+    - y.qq.com
+    - "*.y.qq.com"
+    - streamoc.music.tc.qq.com
+    - mobileoc.music.tc.qq.com
+    - isure.stream.qqmusic.qq.com
+    - dl.stream.qqmusic.qq.com
+    - aqqmusic.tc.qq.com
+    - amobile.music.tc.qq.com
+    - "*.xiami.com"
+    - "*.music.migu.cn"
+    - music.migu.cn
+    - "+.msftconnecttest.com"
+    - "+.msftncsi.com"
+    - localhost.ptlogin2.qq.com
+    - localhost.sec.qq.com
+    - "+.qq.com"
+    - "+.tencent.com"
+    - "+.srv.nintendo.net"
+    - "*.n.n.srv.nintendo.net"
+    - "+.cdn.nintendo.net"
+    - "+.stun.playstation.net"
+    - xbox.*.*.microsoft.com
+    - "*.*.xboxlive.com"
+    - xbox.*.microsoft.com
+    - xnotify.xboxlive.com
+    - "+.battlenet.com.cn"
+    - "+.wotgame.cn"
+    - "+.wggames.cn"
+    - "+.wowsgame.cn"
+    - "+.wargaming.net"
+    - proxy.golang.org
+    - stun.*.*
+    - stun.*.*.*
+    - "+.stun.*.*"
+    - "+.stun.*.*.*"
+    - "+.stun.*.*.*.*"
+    - "+.stun.*.*.*.*.*"
+    - heartbeat.belkin.com
+    - "*.linksys.com"
+    - "*.linksyssmartwifi.com"
+    - "*.router.asus.com"
+    - mesu.apple.com
+    - swscan.apple.com
+    - swquery.apple.com
+    - swdownload.apple.com
+    - swcdn.apple.com
+    - swdist.apple.com
+    - lens.l.google.com
+    - stun.l.google.com
+    - na.b.g-tun.com
+    - "+.nflxvideo.net"
+    - "*.square-enix.com"
+    - "*.finalfantasyxiv.com"
+    - "*.ffxiv.com"
+    - "*.ff14.sdo.com"
+    - ff.dorado.sdo.com
+    - "*.mcdn.bilivideo.cn"
+    - "+.media.dssott.com"
+    - shark007.net
+    - Mijia Cloud
+    - "+.cmbchina.com"
+    - "+.cmbimg.com"
+    - local.adguard.org
+    - "+.sandai.net"
+    - "+.n0808.com"
+    - "+.uu.163.com"
+    - ps.res.netease.com
+    - "+.services.googleapis.cn"
+    - "+.xn--ngstr-lra8j.com"
+  default-nameserver: #默认dns,用于解析DNS服务器的域名，必须为ip,可为加密dns
+    - 223.5.5.5
+  nameserver: #默认的域名解析服务器，如不配置 fallback/proxy-server-nameserver , 则所有域名都由 nameserver 解析
+    - 192.168.5.1 #主路由ip
+    - 119.29.29.29
+  proxy-server-nameserver: #代理节点域名解析服务器，仅用于解析代理节点的域名
+    - https://dns.alidns.com/dns-query#h3=true
+  nameserver-policy: #指定域名查询的解析服务器，可使用geosite, 优先于nameserver/fallback 查询
+    "geosite:cn,private":
+      - 221.5.88.88 #联通dns
+      - 223.5.5.5 #阿里dns
+      - 114.114.114.114 #114dns
+      - https://dns.alidns.com/dns-query#h3=true #阿里加密dns
+  fallback:
+  - tls://1.1.1.1
+
+#两种表示节点的方式
+proxies:
+  - {name: "⭕️ socks", type: socks5, server: 192.168.124.2, port: 1086}
+  - name: "🎞 Freevod专用节点"
+    type: vless
+    server: 198.148.101.223
+    port: 29607
+    uuid: 12d25a50-fdce-4efa-ac89-0cf784962438
+    network: tcp
+    tls: true
+    udp: true
+    flow: xtls-rprx-vision
+    servername: d1.awsstatic.com # REALITY servername
+    reality-opts:
+      public-key: VU3X21unYBfVsvDKDdbx2X65OdHk1p_DQp4BuDlf0lE
+      #short-id: xxx # optional
+    client-fingerprint: chrome # cannot be empty
+
+
+
+
+#策略组配置
+proxy-groups:
+#模式组
+  - name: 🚀 节点选择  #已确认
+    type: select
+    proxies:
+      - ♻️ 自动选择
+      - 🚀 手动切换
+      #- 🔯 故障转移
+      #- 🔮 负载均衡
+      - 🇭🇰 香港节点
+      #- 🇨🇳 台湾节点
+      - 🇸🇬 狮城节点
+      - 🇯🇵 日本节点
+      - 🇰🇷 韩国节点
+      - 🇺🇲 美国节点
+      - 🌎 Other
+      - ⭕️ socks
+      - DIRECT
+  - {name: 🚀 手动切换, <<: *use} #已确认
+  - {name: ♻️ 自动选择, <<: *use, tolerance: 2, type: url-test} #已确认
+  #- {name: 🔯 故障转移, <<: *use, tolerance: 2, type: fallback}  #已确认
+  #- {name: 🔮 负载均衡, <<: *use, tolerance: 2, type: load-balance, strategy: consistent-hashing}  #已确认
+
+#应用组
+
+ #细分应用代理
+  - {name: 🎬 YouTube, <<: *pgtp1} #已确认
+  - {name: 🌟 Google, <<: *pgtp1} #已确认
+  - {name: 💬 Ai, <<: *pgtp1} #已确认
+  - {name: 🔍 NewBing, <<: *pgtp0} #已确认
+  - {name: ⌨️ GitHub, <<: *pgtp1} #已确认
+  - {name: 📲 Telegram, <<: *pgtp1} #已确认
+  - {name: 🎵 TikTok, <<: *pgtp1} #已确认
+  - name: 🎥 Netflix  #已确认
+    type: select
+    proxies:
+      - 🎥 Netflix节点
+      - 🚀 节点选择
+      - ♻️ 自动选择
+      - 🚀 手动切换
+      - 🇭🇰 香港节点
+      #- 🇨🇳 台湾节点
+      - 🇸🇬 狮城节点
+      - 🇯🇵 日本节点
+      - 🇰🇷 韩国节点
+      - 🇺🇲 美国节点
+      - 🌎 Other
+      - ⭕️ socks
+      - DIRECT
+  - {name: 🎧 Spotify, <<: *pgtp0} #已确认
+  - {name: Ⓜ️ Microsoft, <<: *pgcn}   #已确认 
+  - name: 🍎 Apple #已确认
+    type: select
+    proxies:
+      - DIRECT
+      #- 🕎 WireGuard
+      - 🚀 节点选择
+      - 🚀 手动切换
+      - ⭕️ socks
+  - {name: ♻️ Speedtest, <<: *pgtp0}
+  - {name: 📢 FCM, <<: *pgtp1} #已确认
+  #- {name: 🎧 NetEaseMusic, <<: *pgcn} #已确认
+  #- {name: 📺 BiliBili, <<: *pgcn} #已确认
+  #- {name: 📥 Download, <<: *pgcn} #已确认
+  - name: 🌐 DNS_Proxy #已确认
+    <<: *use
+    proxies:
+      - ♻️ 自动选择
+      - 🚀 节点选择
+      - 🚀 手动切换
+      - ⭕️ socks
+      - DIRECT
+      
+ #粗分应用代理
+  - {name: 🎮 Game, <<: *pgtp1}  #已确认
+  - {name: 🌍 World Media, <<: *pgtp1} #已确认
+  - {name: 🌏 China Media, <<: *pgcn} #已确认
+  - name: 🎯 Direct  #已确认
+    type: select
+    proxies:
+      - DIRECT
+      - 🚀 节点选择
+      - 🚀 手动切换 
+      - ⭕️ socks
+ #拦截
+  - name: 🛑 广告拦截  #已确认
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+      - ⭕️ socks
+  - name: 🍃 应用净化  #已确认
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+      - ⭕️ socks
+  - {name: 🐟 漏网之鱼, <<: *pgtp0} #已确认
+#地区节点组
+  - {name: 🇭🇰 香港节点, <<: *use, filter: "(?i)港|hk|hongkong|hong kong"}
+  - {name: 🇯🇵 日本节点, <<: *use, filter: "(?i)日本|jp|japan"}
+  - {name: 🇺🇲 美国节点, <<: *use, filter: "(?i)美|us|unitedstates|united states"}
+  - {name: 🇸🇬 狮城节点, <<: *use, filter: "(?i)(新|sg|singapore)"}
+  - {name: 🇰🇷 韩国节点, <<: *use, filter: "(?i)韩|kr|southkorea|south korea"}
+  - {name: 🌎 Other, <<: *use, filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|hk|hongkong|台|tw|taiwan|日|jp|japan|新|sg|singapore|美|us|unitedstates|韩|kr|southkorea|south korea)).*"}
+  - {name: 🎥 Netflix节点, <<: *use, filter: "(?i)NF|奈飞|解锁|Netflix|NETFLIX|Media"}
+
+
+###################################################################################
+#规则集和规则   
+
+#规则集
+rule-providers:
+
+#自定维护
+  #1
+  AAAA_direct:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/Ethan-018/ClashConfig/main/rule/clash/AAAA_proxy.yaml
+    path: ./ruleset/AAAA_direct.yaml
+  #1
+  AAAA_proxy:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/Ethan-018/ClashConfig/main/rule/clash/AAAA_proxy.yaml
+    path: ./ruleset/AAAA_proxy.yaml
+  #1
+  AAAA_ai:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/Ethan-018/ClashConfig/main/rule/clash/AAAA_ai.yaml
+    path: ./ruleset/AAAA_ai.yaml
+  #1
+  AAAA_reject:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/Ethan-018/ClashConfig/main/rule/clash/AAAA_reject.yaml
+    path: ./ruleset/AAAA_reject.yaml
+
+#直连#########################################
+  #1
+  Lan: 
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Lan/Lan.yaml
+    path: ./ruleset/Lan.yaml
+  #2
+  Direct: # 直连域名列表 direct 
+    type: http
+    behavior: domain
+    url: https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/direct.txt
+    path: ./ruleset/direct.yaml
+    interval: 86400
+  #3
+  ChinaMaxDomain: 
+    type: http
+    behavior: domain
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMax/ChinaMax_Domain.yaml
+    path: ./ruleset/ChinaMaxDomain.yaml
+    interval: 86400
+  #4
+  ChinaMaxIPNoIPv6: 
+    type: http
+    behavior: ipcidr
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMax/ChinaMax_IP_No_IPv6.yaml
+    path: ./ruleset/ChinaMaxIPNoIPv6.yaml
+    interval: 86400
+  #5
+  Applications: # 需要直连的常见软件列表 applications 
+    <<: *rp1
+    url: https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/applications.txt
+    path: ./ruleset/applications.yaml
+  #6
+  tld-not-cn: # 非中国大陆使用的顶级域名列表 tld-not-cn
+    <<: *rp2
+    url: https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/tld-not-cn.txt
+    path: ./ruleset/tld-not-cn.yaml
+
+  #7
+  BiliBili: 
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/BiliBili/BiliBili.yaml
+    path: ./ruleset/BiliBili.yaml
+  #8
+  NetEaseMusic: 
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/NetEaseMusic/NetEaseMusic.yaml
+    path: ./ruleset/NetEaseMusic.yaml
+  #9
+  Microsoft: 
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml
+    path: ./ruleset/Microsoft.yaml
+  #10
+  Download: 
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Download/Download.yaml
+    path: ./ruleset/Download.yaml
+  #11
+  Apple: 
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple_Classical.yaml
+    path: ./ruleset/Apple.yaml
+
+  #12
+  ChinaMedia:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMedia/ChinaMedia.yaml
+    path: ./ruleset/ChinaMedia.yaml
+  #13 可直连
+  Spotify: 
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Spotify/Spotify.yaml
+    path: ./ruleset/Spotify.yaml
+  #14 可直连可代理
+  Game: 
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Game/Game.yaml
+    path: ./ruleset/Game.yaml
+    interval: 86400
+#代理#########################################
+  #1
+  Google:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml
+    path: ./ruleset/Google.yaml
+  #2
+  YouTube:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml
+    path: ./ruleset/YouTube.yaml
+  #3
+  GitHub:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub.yaml
+    path: ./ruleset/GitHub.yaml
+  #4
+  OpenAI:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml
+    path: ./ruleset/OpenAI.yaml
+  #5
+  Telegramcidr: # Telegram 使用的 IP 地址列表 telegramcidr
+    <<: *rp3
+    url: https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/telegramcidr.txt
+    path: ./ruleset/Telegramcidr.yaml
+  #6
+  Telegram:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml
+    path: ./ruleset/Telegram.yaml
+  #7
+  Bing:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Bing/Bing.yaml
+    path: ./ruleset/Bing.yaml
+  #8
+  Netflix:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix.yaml
+    path: ./ruleset/Netflix.yaml
+  #9
+  Disney:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Disney/Disney.yaml
+    path: ./ruleset/Disney.yaml
+  #10
+  HBO:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/HBO/HBO.yaml
+    path: ./ruleset/HBO.yaml
+  #11
+  Proxy:
+    <<: *rp2
+    url: https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/proxy.txt
+    path: ./ruleset/proxy.yaml
+  #12
+  gfw: 
+    <<: *rp2
+    url: https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/gfw.txt
+    path: ./ruleset/gfw.yaml
+  #13
+  FCM:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GoogleFCM/GoogleFCM.yaml
+    path: ./ruleset/FCM.yaml
+  #14
+  Speedtest:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Speedtest/Speedtest.yaml
+    path: ./ruleset/Speedtest.yaml
+  #15
+  TikTok:
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/TikTok/TikTok.yaml
+    path: ./ruleset/TikTok.yaml
+  #16
+  ChinaNoMedia: 
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaNoMedia/ChinaNoMedia_Classical.yaml
+    path: ./ruleset/ChinaNoMedia_Classical.yaml
+
+#拦截#########################################
+  #1
+  AdvertisingLite: 
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AdvertisingLite/AdvertisingLite_Classical.yaml
+    path: ./ruleset/AdvertisingLite.yaml
+  #2
+  ZhihuAds: 
+    <<: *rp1
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ZhihuAds/ZhihuAds.yaml
+    path: ./ruleset/ZhihuAds.yaml
+
+
+
+
+#规则
+rules:
+  #自定维护
+  - RULE-SET,AAAA_direct,🎯 Direct 
+  - RULE-SET,AAAA_proxy,🚀 节点选择
+  - RULE-SET,AAAA_ai,💬 Ai
+  - RULE-SET,AAAA_reject,🛑 广告拦截 
+  #拦截
+  - RULE-SET,AdvertisingLite,🛑 广告拦截 
+  #- RULE-SET,ZhihuAds,🍃 应用净化  
+  #精准匹配
+  #- DOMAIN-SUFFIX,mapbox.com,🚀 节点选择  #注册时候需要代理
+  - RULE-SET,YouTube,🎬 YouTube,no-resolve
+  - RULE-SET,Google,🌟 Google,no-resolve
+  - RULE-SET,OpenAI,💬 Ai
+  - RULE-SET,Bing,🔍 NewBing
+  - RULE-SET,GitHub,⌨️ GitHub
+  - RULE-SET,Telegramcidr,📲 Telegram,no-resolve
+  - RULE-SET,Telegram,📲 Telegram
+  - RULE-SET,FCM,📢 FCM
+  - RULE-SET,Apple,🍎 Apple 
+  - RULE-SET,TikTok,🎵 TikTok
+  - RULE-SET,Spotify,🎧 Spotify,no-resolve
+  - RULE-SET,Netflix,🎥 Netflix
+  - RULE-SET,HBO,🌍 World Media
+  - RULE-SET,Disney,🌍 World Media
+  - RULE-SET,ChinaNoMedia,🌍 World Media
+  - RULE-SET,ChinaMedia,🌏 China Media
+  - RULE-SET,Speedtest,♻️ Speedtest
+  - RULE-SET,Microsoft,Ⓜ️ Microsoft 
+  #- RULE-SET,NetEaseMusic,🎧 NetEaseMusic
+  #- RULE-SET,BiliBili,📺 BiliBili 
+  #- DOMAIN-SUFFIX,freevod.org,🎞 Freevod
+  #泛匹配
+  - RULE-SET,Download,🎯 Direct
+  - RULE-SET,Game,🎮 Game
+  - RULE-SET,Proxy,🚀 节点选择
+  - RULE-SET,gfw,🚀 节点选择
+
+  #直连
+  - RULE-SET,tld-not-cn,🎯 Direct
+  - RULE-SET,Applications,🎯 Direct
+  - RULE-SET,ChinaMaxDomain,🎯 Direct
+  - RULE-SET,ChinaMaxIPNoIPv6,🎯 Direct,no-resolvet
+  - RULE-SET,Lan,🎯 Direct,no-resolve
+  - GEOSITE,CN,🎯 Direct
+  - GEOSITE,geolocation-!cn,🚀 节点选择
+  - GEOIP,CN,🎯 Direct
+  - MATCH,🐟 漏网之鱼
