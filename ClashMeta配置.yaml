@@ -580,7 +580,7 @@ rules:
   - RULE-SET,AAAA_ai,💬 Ai
   - RULE-SET,AAAA_reject,🛑 广告拦截 
   #拦截
-  - RULE-SET,AdvertisingLite,🛑 广告拦截 
+  #- RULE-SET,AdvertisingLite,🛑 广告拦截 
   #- RULE-SET,ZhihuAds,🍃 应用净化  
   #精准匹配
   #- DOMAIN-SUFFIX,mapbox.com,🚀 节点选择  #注册时候需要代理
