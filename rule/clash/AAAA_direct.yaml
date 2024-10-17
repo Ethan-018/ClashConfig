@@ -9,6 +9,7 @@ payload:
   - DOMAIN-SUFFIX,oyunfor.com
   - DOMAIN-SUFFIX,giffgaff.com
   - DOMAIN-SUFFIX,iyzipay.com
+  - DOMAIN-SUFFIX,chatanywhere.tech
 
 # 域名关键字匹配
   - DOMAIN-KEYWORD,baidu
